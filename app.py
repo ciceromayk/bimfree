@@ -1,57 +1,57 @@
 import streamlit as st
-import ifcopenshell
 import os
-import tempfile
 
-st.title("Visualizador IFC para GLB")
+# Configuração da página
+st.set_page_config(page_title="IFC to GLB Converter", page_icon=":building:", layout="wide")
 
-uploaded_file = st.file_uploader("Envie um arquivo IFC", type=["ifc"])
+st.sidebar.title("Visualizador IFC")
+st.sidebar.markdown("Faça upload do seu arquivo IFC para visualizar.")
 
+uploaded_file = st.sidebar.file_uploader("Escolha um arquivo IFC", type=["ifc"])
+
+# Verifica se um arquivo foi carregado
 if uploaded_file is not None:
-    with tempfile.TemporaryDirectory() as tmpdir:
-        ifc_path = os.path.join(tmpdir, "modelo.ifc")
-        glb_path = os.path.join(tmpdir, "modelo.glb")
+    st.sidebar.success("Arquivo carregado com sucesso!")
+    
+    # Salva o arquivo carregado como um arquivo temporário
+    uploaded_file_path = os.path.join(os.getcwd(), 'temp_model.ifc')
+    with open(uploaded_file_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
 
-        # Salva o arquivo IFC no diretório temporário
-        with open(ifc_path, "wb") as f:
-            f.write(uploaded_file.read())
+    # Estrutura HTML/JavaScript com uma referência atualizada ao arquivo IFC
+    viewer_html_code = f"""
+    <html>
+    <head>
+        <script type="module">
+            import {{ IfcViewerAPI }} from 'https://cdn.jsdelivr.net/npm/@ifcjs/viewer@3.0.0/dist/index.js';
 
-        # Tenta carregar o arquivo IFC
-        try:
-            ifc_model = ifcopenshell.open(ifc_path)
-        except Exception as e:
-            st.error(f"Erro ao abrir o arquivo IFC: {e}")
-            st.stop()
+            const container = document.getElementById('viewer');
+            const viewer = new IfcViewerAPI({{ container, backgroundColor: new THREE.Color(0xffffff) }});
+            viewer.addAxes();
+            viewer.addGrid();
 
-        # Tentativa de converter IFC → GLB
-        try:
-            import ifcopenshell.geom as geom
+            async function loadIfcUrl() {{
+                await viewer.IFC.loadIfcUrl('{uploaded_file_path}');
+                viewer.fitToFrame();
+            }}
 
-            # Configuração do ambiente de geometria
-            settings = geom.settings()
-            settings.set(settings.USE_WORLD_COORDS, True)
+            loadIfcUrl();
+        </script>
+        <style>
+            #viewer {{
+                width: 100%;
+                height: 800px;
+                border: 1px solid #ccc;
+            }}
+        </style>
+    </head>
+    <body>
+        <div id="viewer"></div>
+    </body>
+    </html>
+    """
 
-            from ifcopenshell.geom.utils import initialize_processor, finalize_processor, add_shape, export_gltf
-
-            scene = initialize_processor(settings)
-            for element in ifc_model.by_type("IfcProduct"):
-                try:
-                    shape = geom.create_shape(settings, element)
-                    add_shape(scene, shape)
-                except:
-                    pass
-
-            export_gltf(scene, glb_path)
-            finalize_processor(scene)
-
-            st.success("Conversão IFC para GLB realizada com sucesso!")
-
-            # Exibe visualizador 3D externo
-            st.markdown("### Visualização 3D do Modelo")
-            viewer_url = f"https://3dviewer.net/#model={glb_path}"
-            st.components.v1.iframe(viewer_url, height=600, scrolling=True)
-
-        except Exception as e:
-            st.error("Erro ao tentar converter para GLB. Provavelmente o módulo `geom` não está disponível.")
-            st.code(f"{e}", language="python")
-            st.markdown("**⚠️ Dica:** Tente usar uma versão do `ifcopenshell` com suporte ao `geom`. Veja [instruções aqui](https://github.com/IfcOpenShell/IfcOpenShell).")
+    # Renderiza o HTML
+    st.components.v1.html(viewer_html_code, height=800)
+else:
+    st.sidebar.warning("Por favor, carregue um arquivo IFC.")
