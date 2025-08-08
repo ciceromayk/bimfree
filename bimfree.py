@@ -1,25 +1,40 @@
-import streamlit as st
 import ifcopenshell
 
-def load_ifc(file_content):
-    try:
-        ifc_file = ifcopenshell.file(schema="IFC4")
-        ifc_file.read(file_content)
-        return ifc_file
-    except:
-        st.error("Erro ao ler o arquivo IFC")
+def extract_quantities(ifc_file_path):
+    # Abra o modelo IFC
+    model = ifcopenshell.open(ifc_file_path)
 
-st.title("Visualização de Arquivos IFC Online")
+    # Criar uma lista para armazenar os quantitativos
+    quantities_list = []
 
-uploaded_file = st.file_uploader("Escolha um arquivo IFC", type=["ifc"])
+    # Iterar sobre todos os elementos que tenham um tipo geométrico
+    for element in model:
+        # Verifica se o elemento é um IfcProduct (que tem geometria)
+        if 'IfcProduct' in element.is_a():
+            quantities = {}
 
-if uploaded_file is not None:
-    model = load_ifc(uploaded_file.getvalue())
-    if model:
-        projects = model.by_type("IfcProject")
-        if projects:
-            st.write("Nome do Projeto:", projects[0].Name)
-        else:
-            st.error("Nenhum projeto encontrado no arquivo.")
-else:
-    st.info("Por favor, faça upload de um arquivo IFC.")
+            # Obter o nome e o tipo do elemento
+            quantities['Name'] = element.Name
+            quantities['Type'] = element.is_a()
+
+            # Tentativa de obter a área ou volume
+            if 'Volume' in element.get_info():
+                quantities['Volume'] = element.get_info()['Volume']
+            elif 'Area' in element.get_info():
+                quantities['Area'] = element.get_info()['Area']
+
+            # Adicionar quantitativos à lista
+            quantities_list.append(quantities)
+
+    return quantities_list
+
+def main(ifc_file_path):
+    quantities = extract_quantities(ifc_file_path)
+
+    # Exibir os quantitativos extraídos
+    for qty in quantities:
+        print(qty)
+
+if __name__ == "__main__":
+    # Substitua 'seuarquivo.ifc' pelo caminho do seu arquivo IFC
+    main('seuarquivo.ifc')
