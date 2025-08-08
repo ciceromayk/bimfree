@@ -1,40 +1,66 @@
-import ifcopenshell
+import streamlit as st
+import base64
 
-def extract_quantities(ifc_file_path):
-    # Abra o modelo IFC
-    model = ifcopenshell.open(ifc_file_path)
+# Configuração da página
+st.set_page_config(page_title="IFC to GLB Converter", page_icon=":building:", layout="wide")
 
-    # Criar uma lista para armazenar os quantitativos
-    quantities_list = []
+st.sidebar.title("Visualizador IFC")
+st.sidebar.markdown("Faça upload do seu arquivo IFC para visualizar.")
 
-    # Iterar sobre todos os elementos que tenham um tipo geométrico
-    for element in model:
-        # Verifica se o elemento é um IfcProduct (que tem geometria)
-        if 'IfcProduct' in element.is_a():
-            quantities = {}
+uploaded_file = st.sidebar.file_uploader("Escolha um arquivo IFC", type=["ifc"])
 
-            # Obter o nome e o tipo do elemento
-            quantities['Name'] = element.Name
-            quantities['Type'] = element.is_a()
+# Verifica se um arquivo foi carregado
+try:
+    if uploaded_file is not None:
+        st.sidebar.success("Arquivo carregado com sucesso!")
+        
+        # Lê o arquivo carregado e encode em base64
+        file_content = uploaded_file.read()
+        encoded_file = base64.b64encode(file_content).decode('utf-8')
+        
+        # Estrutura HTML/JavaScript usando Blob para carregar o IFC
+        viewer_html_code = f"""
+        <html>
+        <head>
+            <script type="module">
+                import {{ IfcViewerAPI }} from 'https://cdn.jsdelivr.net/npm/@ifcjs/viewer@3.0.0/dist/index.js';
 
-            # Tentativa de obter a área ou volume
-            if 'Volume' in element.get_info():
-                quantities['Volume'] = element.get_info()['Volume']
-            elif 'Area' in element.get_info():
-                quantities['Area'] = element.get_info()['Area']
+                const container = document.getElementById('viewer');
+                const viewer = new IfcViewerAPI({{ container, backgroundColor: new THREE.Color(0xffffff) }});
+                viewer.addAxes();
+                viewer.addGrid();
 
-            # Adicionar quantitativos à lista
-            quantities_list.append(quantities)
+                async function loadIfc() {{
+                    try {{
+                        const response = await fetch('data:application/octet-stream;base64,{encoded_file}');
+                        const ifcBlob = await response.blob();
+                        const ifcURL = URL.createObjectURL(ifcBlob);
+                        await viewer.IFC.loadIfcUrl(ifcURL);
+                        viewer.fitToFrame();
+                    }} catch (error) {{
+                        console.error("Erro ao carregar IFC:", error);
+                    }}
+                }}
 
-    return quantities_list
+                loadIfc();
+            </script>
+            <style>
+                #viewer {{
+                    width: 100%;
+                    height: 800px;
+                    border: 1px solid #ccc;
+                }}
+            </style>
+        </head>
+        <body>
+            <div id="viewer"></div>
+        </body>
+        </html>
+        """
 
-def main(ifc_file_path):
-    quantities = extract_quantities(ifc_file_path)
-
-    # Exibir os quantitativos extraídos
-    for qty in quantities:
-        print(qty)
-
-if __name__ == "__main__":
-    # Substitua 'seuarquivo.ifc' pelo caminho do seu arquivo IFC
-    main('seuarquivo.ifc')
+        # Renderiza o HTML
+        st.components.v1.html(viewer_html_code, height=800)
+    else:
+        st.sidebar.warning("Por favor, carregue um arquivo IFC.")
+except Exception as e:
+    st.error(f"Ocorreu um erro: {e}")
