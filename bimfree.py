@@ -17,7 +17,6 @@ def extrair_elementos(ifc_file):
     for elem in ifc_file.by_type("IfcProduct"):
         nome = getattr(elem, 'Name', 'Sem nome')
         global_id = getattr(elem, 'GlobalId', 'Sem ID')
-        # Pode incluir geometria ou atributos adicionais aqui
         elementos.append({'Nome': nome, 'GlobalId': global_id})
     return elementos
 
@@ -29,7 +28,6 @@ def extrair_quantitativos(ifc_file):
             material_nome = getattr(qty_set, 'Name', 'Sem nome')
             quantidade = getattr(qty, 'Quantity', None)
             nome_qty = getattr(qty, 'Name', 'Sem nome')
-            # Extração de volume, área, comprimento se disponíveis
             volume = getattr(qty, 'Volume', None)
             area = getattr(qty, 'Area', None)
             comprimento = getattr(qty, 'Length', None)
@@ -43,7 +41,7 @@ def extrair_quantitativos(ifc_file):
             })
     return pd.DataFrame(quant_data)
 
-# Função para criar uma visualização 3D básica usando pythreejs
+# Função para criar visualização 3D com pythreejs
 def criar_visualizacao_3d():
     esfera = Mesh(
         SphereGeometry(radius=1, widthSegments=32, heightSegments=32),
