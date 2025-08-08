@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import base64
 
 # Configuração da página
 st.set_page_config(page_title="IFC to GLB Converter", page_icon=":building:", layout="wide")
@@ -13,12 +14,12 @@ uploaded_file = st.sidebar.file_uploader("Escolha um arquivo IFC", type=["ifc"])
 if uploaded_file is not None:
     st.sidebar.success("Arquivo carregado com sucesso!")
     
-    # Salva o arquivo carregado como um arquivo temporário
-    uploaded_file_path = os.path.join(os.getcwd(), 'temp_model.ifc')
-    with open(uploaded_file_path, "wb") as f:
-        f.write(uploaded_file.getbuffer())
+    # Lê o arquivo carregado e encode em base64
+    file_content = uploaded_file.getvalue()
+    encoded_file = base64.b64encode(file_content).decode('utf-8')
+    file_name = uploaded_file.name
 
-    # Estrutura HTML/JavaScript com uma referência atualizada ao arquivo IFC
+    # Estrutura HTML/JavaScript usando Blob para carregar o IFC
     viewer_html_code = f"""
     <html>
     <head>
@@ -30,12 +31,15 @@ if uploaded_file is not None:
             viewer.addAxes();
             viewer.addGrid();
 
-            async function loadIfcUrl() {{
-                await viewer.IFC.loadIfcUrl('{uploaded_file_path}');
+            async function loadIfc() {{
+                const response = await fetch('data:application/octet-stream;base64,{encoded_file}');
+                const ifcBlob = await response.blob();
+                const ifcURL = URL.createObjectURL(ifcBlob);
+                await viewer.IFC.loadIfcUrl(ifcURL);
                 viewer.fitToFrame();
             }}
 
-            loadIfcUrl();
+            loadIfc();
         </script>
         <style>
             #viewer {{
