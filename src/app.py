@@ -1,7 +1,7 @@
 # src/app.py
 import streamlit as st
 import plotly.graph_objects as go
-from viewer_utils import process_ifc_file # Importe a função
+from viewer_utils import process_ifc_file
 
 st.title("BIM Viewer Online")
 st.write("Carregue seu arquivo IFC para visualizar o modelo 3D.")
@@ -9,23 +9,42 @@ st.write("Carregue seu arquivo IFC para visualizar o modelo 3D.")
 uploaded_file = st.file_uploader("Escolha um arquivo IFC...", type=["ifc"])
 
 if uploaded_file is not None:
+    # Salvar o arquivo temporariamente para o ifcopenshell poder ler
     with open("temp.ifc", "wb") as f:
         f.write(uploaded_file.getbuffer())
 
-    try:
-        model = process_ifc_file("temp.ifc")
+    with st.spinner('Processando modelo...'):
+        vertices, faces = process_ifc_file("temp.ifc")
 
-        # Lógica para converter o modelo IFC em dados para o Plotly
-        # Isso pode envolver a criação de um `go.Mesh3d` para representar as geometrias
-
-        # Exemplo simplificado de visualização com Plotly (lógica de conversão precisa ser implementada)
-        fig = go.Figure(data=[go.Mesh3d(
-            # Lógica para extrair e preencher vértices e faces
-            x=[], y=[], z=[],
-            #...
-        )])
-
+    if vertices and faces:
+        st.success("Modelo processado com sucesso!")
+        
+        # Criar o objeto de visualização 3D com Plotly
+        fig = go.Figure(
+            data=[
+                go.Mesh3d(
+                    x=[v[0] for v in vertices],
+                    y=[v[1] for v in vertices],
+                    z=[v[2] for v in vertices],
+                    i=[f[0] for f in faces],
+                    j=[f[1] for f in faces],
+                    k=[f[2] for f in faces],
+                    color='lightblue', # Cor padrão do modelo
+                    opacity=0.8,
+                )
+            ]
+        )
+        
+        # Opcional: ajustar layout para uma melhor visualização 3D
+        fig.update_layout(
+            scene_aspectmode='data',
+            scene=dict(
+                xaxis=dict(showbackground=False, showgrid=False, zeroline=False, visible=False),
+                yaxis=dict(showbackground=False, showgrid=False, zeroline=False, visible=False),
+                zaxis=dict(showbackground=False, showgrid=False, zeroline=False, visible=False),
+            )
+        )
+        
         st.plotly_chart(fig, use_container_width=True)
-
-    except Exception as e:
-        st.error(f"Erro ao processar o arquivo: {e}")
+    else:
+        st.warning("O arquivo IFC não contém geometria visível para ser renderizada.")
