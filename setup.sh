@@ -1,14 +1,13 @@
 #!/bin/bash
 
-# Define the Python version. Streamlit Cloud uses Python 3.9 or higher.
-PYTHON_VERSION=$(python -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
+echo "Attempting to install ifcopenshell from a pre-compiled wheel file."
 
-# Define the ifcopenshell wheel URL for a common Python 3.9 Linux build
-# NOTE: You may need to change this URL if a new version is released or a different Python version is used.
-# Check the official IfcOpenShell releases page for the latest URL.
-IFCOPENSHELL_WHEEL_URL="https://github.com/IfcOpenShell/IfcOpenShell/releases/download/v0.7.0/ifcopenshell-0.7.0-cp39-cp39-manylinux_2_17_x86_64.whl"
+# This URL is for a specific version and Python environment.
+# It points to a build that is known to work on Debian-based systems.
+# This is more reliable than using --find-links.
+WHEEL_URL="https://github.com/IfcOpenShell/IfcOpenShell/releases/download/v0.7.0/ifcopenshell-0.7.0-cp39-cp39-manylinux_2_17_x86_64.whl"
 
-echo "Installing IfcOpenShell from URL: $IFCOPENSHELL_WHEEL_URL"
-pip install --no-index --find-links https://github.com/IfcOpenShell/IfcOpenShell/releases $IFCOPENSHELL_WHEEL_URL
+# Use a direct pip install command
+pip install "$WHEEL_URL"
 
-echo "IfcOpenShell installation complete."
+echo "ifcopenshell installation script finished."
