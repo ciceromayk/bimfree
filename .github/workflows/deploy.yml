@@ -1,1 +1,24 @@
 
+# .github/workflows/deploy.yml
+name: Deploy to Streamlit Cloud
+
+on:
+  push:
+    branches:
+      - main # Dispara a ação sempre que houver um push na branch 'main'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Deploy Streamlit App
+        uses: streamlit/streamlit-deploy-action@v1
+        with:
+          streamlit_token: ${{ secrets.STREAMLIT_TOKEN }}
+          repo_name: ${{ github.repository }}
+          branch: main
+          file_or_folder: src/app.py
