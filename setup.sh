@@ -1,13 +1,12 @@
 #!/bin/bash
 
-echo "Attempting to install ifcopenshell from a pre-compiled wheel file."
+# Exibe uma mensagem para o log de implantação
+echo "Iniciando a instalação do ifcopenshell..."
 
-# This URL is for a specific version and Python environment.
-# It points to a build that is known to work on Debian-based systems.
-# This is more reliable than using --find-links.
+# URL do arquivo .whl pre-compilado para Python 3.9 e Linux
 WHEEL_URL="https://github.com/IfcOpenShell/IfcOpenShell/releases/download/v0.7.0/ifcopenshell-0.7.0-cp39-cp39-manylinux_2_17_x86_64.whl"
 
-# Use a direct pip install command
-pip install "$WHEEL_URL"
+# Use o comando `uv` para instalar diretamente o arquivo binário
+uv pip install "$WHEEL_URL"
 
-echo "ifcopenshell installation script finished."
+echo "Instalação do ifcopenshell concluída."
