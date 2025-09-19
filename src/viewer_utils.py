@@ -6,7 +6,6 @@ import numpy as np
 def process_ifc_file(ifc_file_path):
     # Configurações para a geração da geometria
     settings = ifcopenshell.geom.settings()
-    settings.set(settings.USE_PYTHON_OPENCASCADE, True) # Use o motor OpenCASCADE
     
     # Abrir o arquivo IFC
     ifc_file = ifcopenshell.open(ifc_file_path)
