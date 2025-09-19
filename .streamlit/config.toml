@@ -1,5 +1,3 @@
 [runner]
 install_system_packages = true
-
-[runner]
 post_install = "bash setup.sh"
