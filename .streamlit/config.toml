@@ -1,3 +1,0 @@
-[runner]
-install_system_packages = true
-post_install = "bash ./setup.sh"
