@@ -2,3 +2,4 @@ streamlit
 ifcopenshell
 pandas
 numpy
+plotly
