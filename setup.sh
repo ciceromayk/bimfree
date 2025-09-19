@@ -1,17 +1,21 @@
 #!/bin/bash
 
-echo "Starting ifcopenshell installation..."
+echo "Iniciando a instalação do ifcopenshell..."
 
-# URL of the pre-compiled .whl file for Python 3.9 and Linux
+# URL do arquivo binário pré-compilado para o ambiente do Streamlit Cloud
+# Esta versão é compatível com Python 3.9 e sistemas Linux (Debian)
 WHEEL_URL="https://github.com/IfcOpenShell/IfcOpenShell/releases/download/v0.7.0/ifcopenshell-0.7.0-cp39-cp39-manylinux_2_17_x86_64.whl"
 WHEEL_FILE="ifcopenshell-0.7.0-cp39-cp39-manylinux_2_17_x86_64.whl"
 
-# Use wget to download the wheel file
-wget -q --show-progress "$WHEEL_URL" -O "$WHEEL_FILE"
+# Comando para baixar o arquivo .whl de forma direta e silenciosa
+# -q: modo silencioso
+# -O: salva o arquivo com o nome especificado
+wget -q "$WHEEL_URL" -O "$WHEEL_FILE"
 
-echo "Downloaded ifcopenshell wheel file."
+echo "Arquivo .whl baixado com sucesso."
 
-# Use the correct Python environment's pip to install the downloaded file
+# Comando para instalar o pacote usando o pip do ambiente virtual
+# O `python -m pip` garante que o pip correto do ambiente virtual seja usado
 python -m pip install "$WHEEL_FILE"
 
-echo "ifcopenshell installation completed."
+echo "ifcopenshell instalado com sucesso."
